@@ -50,8 +50,9 @@
   .uhit{stroke:transparent;stroke-width:30;cursor:pointer}
   .uhit-dot{fill:transparent;cursor:pointer}
   .emoji{font-size:18px;cursor:pointer;paint-order:stroke;stroke:rgba(244,236,215,.9);stroke-width:3px}
-  .photo-frame{fill:#f0e7d1;stroke:var(--ink);stroke-width:1.6}
+  .photo-frame{fill:none;stroke:var(--ink);stroke-width:1.6}
   .photo-frame.empty{fill:#e3d4b3}
+  .skull{font-size:15px;paint-order:stroke;stroke:rgba(244,236,215,.9);stroke-width:3px}
   .silh{fill:var(--ink-soft);opacity:.32}
   .ribbon{fill:#dcc79a;stroke:var(--ochre);stroke-width:1;opacity:.96}
   .person.selected .ribbon{fill:#e7b775;stroke:#8a5316}
@@ -169,6 +170,14 @@
       </filter>
       <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" result="n"/>
         <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .5 0"/></filter>
+      <filter id="photo-aged" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%">
+        <feColorMatrix type="matrix" values="0.636 0.461 0.113 0 0  0.209 0.812 0.101 0 0  0.163 0.320 0.479 0 0  0 0 0 1 0"/>
+        <feComponentTransfer><feFuncR type="linear" slope="1.02" intercept="0.02"/><feFuncG type="linear" slope="1" intercept="0.015"/><feFuncB type="linear" slope="0.96" intercept="0"/></feComponentTransfer>
+      </filter>
+      <filter id="photo-bw" color-interpolation-filters="sRGB" x="0" y="0" width="100%" height="100%">
+        <feColorMatrix type="matrix" values="0.31 0.59 0.11 0 0.03  0.31 0.59 0.11 0 0.015  0.31 0.59 0.11 0 -0.01  0 0 0 1 0"/>
+        <feComponentTransfer><feFuncR type="linear" slope="1.05" intercept="0"/><feFuncG type="linear" slope="1.05" intercept="0"/><feFuncB type="linear" slope="1.05" intercept="0"/></feComponentTransfer>
+      </filter>
     </defs>
     <rect x="0" y="0" width="100%" height="100%" fill="transparent" filter="url(#grain)" opacity="0.05" style="pointer-events:none"/>
     <g id="viewport">
@@ -371,16 +380,19 @@
     const p = get(id); if (!p) return;
     const g = el("g", { class: "person" + (selected === id ? " selected" : "") + (linkFirst && (linkFirst === id || (linkFirst.p === id)) ? " picked" : ""), "data-id": id, transform: "translate(" + x + "," + y + ")" }, gNode);
     if (animate && animateIds && animateIds.has(id)) g.classList.add("rise");
+    const dead = !!(p.death && p.death.trim());
     if (p.photo) {
       const cid = "clip_" + id, cp = el("clipPath", { id: cid }, g);
       el("ellipse", { cx: 0, cy: OV_CY, rx: OV_RX, ry: OV_RY }, cp);
-      el("image", { href: p.photo, "clip-path": "url(#" + cid + ")", x: -OV_RX, y: OV_CY - OV_RY, width: OV_RX * 2, height: OV_RY * 2, preserveAspectRatio: "xMidYMid slice" }, g);
+      const im = el("image", { "clip-path": "url(#" + cid + ")", x: -OV_RX, y: OV_CY - OV_RY, width: OV_RX * 2, height: OV_RY * 2, preserveAspectRatio: "xMidYMid slice", filter: dead ? "url(#photo-bw)" : "url(#photo-aged)" }, g);
+      im.setAttribute("href", p.photo); im.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", p.photo);
       el("ellipse", { cx: 0, cy: OV_CY, rx: OV_RX, ry: OV_RY, class: "photo-frame" }, g);
     } else {
       el("ellipse", { cx: 0, cy: OV_CY, rx: OV_RX, ry: OV_RY, class: "photo-frame empty" }, g);
       el("circle", { cx: 0, cy: OV_CY - 8, r: 9, class: "silh" }, g);
       el("path", { d: "M -15 " + (OV_CY + 24) + " q 15 -20 30 0 L 15 " + (OV_CY + 26) + " L -15 " + (OV_CY + 26) + " Z", class: "silh" }, g);
     }
+    if (dead) { const sk = el("text", { x: 0, y: OV_CY - OV_RY - 3, class: "skull", "text-anchor": "middle" }, g); sk.textContent = "☠️"; }
     const rw = PERSON_W - 22, rh = 26, ry0 = OV_RY + OV_CY + 6;
     el("path", { d: "M " + (-rw / 2) + " " + ry0 + " L " + (rw / 2) + " " + ry0 + " L " + (rw / 2 - 8) + " " + (ry0 + rh / 2) + " L " + (rw / 2) + " " + (ry0 + rh) + " L " + (-rw / 2) + " " + (ry0 + rh) + " L " + (-rw / 2 + 8) + " " + (ry0 + rh / 2) + " Z", class: "ribbon" }, g);
     const nm = el("text", { class: "pname", x: 0, y: ry0 + rh / 2 + 5, "text-anchor": "middle" }, g); nm.textContent = fullName(p);
