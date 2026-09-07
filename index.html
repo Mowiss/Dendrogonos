@@ -617,12 +617,13 @@
     clone.setAttribute("viewBox", (bb.minx - pad) + " " + (bb.miny - pad) + " " + W + " " + H);
     clone.removeAttribute("width"); clone.removeAttribute("height");
     const cvp = clone.querySelector("#viewport"); if (cvp) cvp.removeAttribute("transform");
-    clone.querySelectorAll(".hit,.pencil,.uhit").forEach(n => n.remove());
+    clone.querySelectorAll(".hit,.pencil,.uhit,.gen-line").forEach(n => n.remove());
     clone.querySelectorAll(".rise").forEach(n => n.classList.remove("rise"));
     const s = new XMLSerializer().serializeToString(clone).replace(/(<svg[^>]*>)/, '$1<rect x="' + (bb.minx - pad) + '" y="' + (bb.miny - pad) + '" width="' + W + '" height="' + H + '" fill="#e8dcc0"/>');
+    const css = Array.from(document.querySelectorAll("style")).map(st => st.textContent).join("\n");
     const w = window.open("", "_blank");
-    w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Dendrogonos</title><link href="https://fonts.googleapis.com/css2?family=IM+Fell+English&display=swap" rel="stylesheet"><style>@page{margin:10mm}body{margin:0;font-family:\'IM Fell English\',serif}svg{width:100%;height:auto;display:block}</style></head><body>' + s + "</body></html>");
-    w.document.close(); w.focus(); setTimeout(() => { try { w.print(); } catch (e) {} }, 500);
+    w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Dendrogonos</title><link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&display=swap" rel="stylesheet"><style>' + css + '</style><style>@page{margin:8mm}html,body{margin:0;background:#e8dcc0}svg#stage{position:static;inset:auto;width:100%;height:auto;display:block}</style></head><body>' + s + "</body></html>");
+    w.document.close(); w.focus(); setTimeout(() => { try { w.print(); } catch (e) {} }, 700);
   }
 
   let toastT; function toast(m) { const t = document.getElementById("toast"); t.textContent = m; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2000); }
